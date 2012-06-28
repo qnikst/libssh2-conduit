@@ -1,5 +1,5 @@
 Name:                libssh2-conduit
-Version:             0.1
+Version:             0.1.1
 
 Synopsis:            Conduit wrappers for libssh2 FFI bindings (see libssh2 package).
 
