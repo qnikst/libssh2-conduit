@@ -41,6 +41,7 @@ Library
                      , monad-control >= 0.3
                      , resourcet
                      , stm
+                     , bytestring
                      , transformers
   
   -- Modules not exported by this package.

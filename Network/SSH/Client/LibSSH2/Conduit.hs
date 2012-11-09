@@ -12,21 +12,24 @@ import Control.Concurrent.STM
 import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Resource
+import Data.ByteString (ByteString)
+import qualified Data.ByteString as S
 import Data.Conduit
+import qualified Data.Conduit.Binary as SB
 #if MIN_VERSION_conduit(0,5,0)
 import Data.Conduit.Util
 #endif
 import Network.SSH.Client.LibSSH2
 import Network.SSH.Client.LibSSH2.Foreign
 
--- | Read all contents of libssh2's Channel.
-sourceChannel :: MonadResource m => Channel -> Source m String
+-- | Read all contents of libssh2's Channel
+sourceChannel :: MonadResource m => Channel -> Source m ByteString
 sourceChannel ch = src
   where
     src = sourceIO initState defaultClose pull
     pull _state = do
-      (sz, res) <- liftIO $ readChannel ch 0x400
-      if sz > 0
+      res <- liftIO $ readChannel ch 0x400
+      if S.length res > 0
         then return (IOOpen res)
         else return IOClosed
 
@@ -61,10 +64,10 @@ execCommand ::
   => Bool
   -> Session
   -> String
-  -> IO (Maybe CommandsHandle, Source m String)
+  -> IO (Maybe CommandsHandle, Source m ByteString)
 execCommand returnCodeOnExit sess cmd = do
   (ch, channel) <- initCH returnCodeOnExit sess
-  let src = execCommandS ch channel cmd $= splitLines
+  let src = execCommandS ch channel cmd $= SB.lines {-splitLines-}
   return (if returnCodeOnExit then Just ch else Nothing, src)
 
 -- | Handles channel opening and closing.
@@ -118,15 +121,15 @@ execCommandS ::
   => CommandsHandle
   -> Channel
   -> String
-  -> Source m String
+  -> Source m ByteString
 execCommandS var channel command =
   source (pull channel)
   where
     source = sourceIO initState defaultClose
     next ch = source (pullAnswer ch)
     pullAnswer ch _state = do
-      (sz, res) <- liftIO $ readChannel ch 0x400
-      if sz > 0
+      res <- liftIO $ readChannel ch 0x400
+      if S.length res > 0
         then return (IOOpen res)
         else do liftIO $ cleanupChannel var ch
                 return IOClosed
