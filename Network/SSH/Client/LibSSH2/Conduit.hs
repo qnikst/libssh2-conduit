@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
-
+{-# LANGUAGE CPP #-}
 module Network.SSH.Client.LibSSH2.Conduit
        ( CommandsHandle
        , execCommand
@@ -13,6 +13,9 @@ import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Resource
 import Data.Conduit
+#if MIN_VERSION_conduit(0,5,0)
+import Data.Conduit.Util
+#endif
 import Network.SSH.Client.LibSSH2
 import Network.SSH.Client.LibSSH2.Foreign
 
